@@ -7,11 +7,11 @@
 
 # define BUFFER 1000
 
-int main(int argc, char * argv[]){
+int main(int argc, char * argv[]) {
 
     // potential software design
     //char design[] = {'\\', '-', '.', '-', '/'};
-    //int count = 0;
+    int count = 0;
 
     int fstSize = 10;
     char serverName[BUFFER] = ".cs.sierracollege.edu";
@@ -23,7 +23,7 @@ int main(int argc, char * argv[]){
     
      while(fgets(serverSelect, BUFFER, stdin)){
 
-        char *nl = strchr(serverSelect, '\n');
+        char *nl = strchr(serverSelect,'\n');
 
         if(nl){
 
@@ -32,7 +32,6 @@ int main(int argc, char * argv[]){
 
         }
         
-
     }
 
     strcat(serverSelect, serverName);
@@ -46,16 +45,17 @@ int main(int argc, char * argv[]){
         exit(1);
     }
 
-    printf("\nConnected to the Socket\n");
+    printf("\nConnected to the Socket");
+
+    FILE *s = fdopen(fd, "r+");
+    char response[BUFFER];
+    char fileName[BUFFER];
+    long size;
 
     printf("\nOption\nL) --> list of files\nD) --> download files\nQ) --> Quit\n");
 
-
-    FILE *s = fdopen(fd, "r+");
-    char response[1000];
-
     fflush(s);
-
+    
     while(fgets(request, 3, stdin)){
 
         char *nl = strchr(request, '\n');
@@ -77,7 +77,7 @@ int main(int argc, char * argv[]){
 
             fprintf(s, "LIST\n");
             
-            while(fgets(response, 1000, s)){
+            while(fgets(response, BUFFER, s)){
 
                 if(*response == '.'){
                 break;
@@ -85,14 +85,33 @@ int main(int argc, char * argv[]){
                 }
 
                 printf("%s", response);
+                fflush(s);
+
             }
 
         }
 
         else if(*request == 'D'){
 
-            return 0;
+           printf("\nFile to Download: ");
+           
+           fgets(fileName, BUFFER, stdin);
 
+            char *nl = strchr(fileName, '\n');
+
+            if(nl){
+
+                *nl = '\0';
+
+            }
+
+            fprintf(s,"SIZE %s\n", fileName);
+
+            fgets(response, BUFFER, s);
+
+            sscanf(response, "+OK %ld", &size);
+
+            printf("size --> %ld", size);
 
         }
 
@@ -101,7 +120,7 @@ int main(int argc, char * argv[]){
             printf("\nERROR --> not a valid option");
             
         }
-
+ 
         fflush(s);
         printf("\nOption\nL) --> list of files\nD) --> download files\nQ) --> Quit\n");
 
