@@ -50,7 +50,11 @@ int main(int argc, char * argv[]) {
     FILE *s = fdopen(fd, "r+");
     char response[BUFFER];
     char fileName[BUFFER];
+    char garbageBuff[3];
     long size;
+    unsigned char buffer[BUFFER];
+    long transfered;
+    
 
     printf("\nOption\nL) --> list of files\nD) --> download files\nQ) --> Quit\n");
 
@@ -93,6 +97,7 @@ int main(int argc, char * argv[]) {
 
         else if(*request == 'D'){
 
+
            printf("\nFile to Download: ");
            
            fgets(fileName, BUFFER, stdin);
@@ -105,13 +110,39 @@ int main(int argc, char * argv[]) {
 
             }
 
+            FILE *localFile = fopen(fileName, "w");
+
             fprintf(s,"SIZE %s\n", fileName);
 
             fgets(response, BUFFER, s);
 
             sscanf(response, "+OK %ld", &size);
 
-            printf("size --> %ld", size);
+            fprintf(s, "GET %s\n", fileName);
+
+            fread(garbageBuff, 3, 3, s);
+
+            printf("successfully captured --> %s", garbageBuff);
+
+            fread(buffer, 1, size-5, s);
+            fwrite(buffer, 1, size-5,localFile);
+
+            //if(size <= 1000){
+
+               // printf("size was smaller than 1000");
+              //  char *buffer = malloc(size);
+                //int readByte = fread(buffer, 1, size, s);
+
+                //if(readByte == size){
+
+                //printf("successfully have read %d of Bytes", readByte);
+
+                //}
+
+            //}
+
+
+
 
         }
 
