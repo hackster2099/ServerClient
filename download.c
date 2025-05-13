@@ -54,7 +54,7 @@ int main(int argc, char * argv[]) {
     long size;
     unsigned char buffer[BUFFER];
     long transfered;
-    
+    int remaining;
 
     printf("\nOption\nL) --> list of files\nD) --> download files\nQ) --> Quit\n");
 
@@ -97,7 +97,6 @@ int main(int argc, char * argv[]) {
 
         else if(*request == 'D'){
 
-
            printf("\nFile to Download: ");
            
            fgets(fileName, BUFFER, stdin);
@@ -110,7 +109,7 @@ int main(int argc, char * argv[]) {
 
             }
 
-            FILE *localFile = fopen(fileName, "w");
+            FILE *localFile = fopen(fileName, "wb");
 
             fprintf(s,"SIZE %s\n", fileName);
 
@@ -120,30 +119,43 @@ int main(int argc, char * argv[]) {
 
             fprintf(s, "GET %s\n", fileName);
 
-            fread(garbageBuff, 3, 3, s);
+            if(size == 0){
 
-            printf("successfully captured --> %s", garbageBuff);
+                fread(buffer, 0, size, s);
+                fwrite(buffer, 0, size,localFile);
+                fflush(s);
 
-            fread(buffer, 1, size-5, s);
-            fwrite(buffer, 1, size-5,localFile);
+            }
 
-            //if(size <= 1000){
+        if(size < 1000 && size != 0){
 
-               // printf("size was smaller than 1000");
-              //  char *buffer = malloc(size);
-                //int readByte = fread(buffer, 1, size, s);
+                fread(garbageBuff, 3, 3, s);
+                fread(buffer, 1, size, s); // --> -5 for size, same as below
+                fwrite(buffer, 1, size,localFile);
+                fflush(s);
 
-                //if(readByte == size){
+            }
 
-                //printf("successfully have read %d of Bytes", readByte);
+            if(size >= 1000){
 
-                //}
+                fread(garbageBuff, 3, 3, s);
+                
+                while(transfered <= remaining){
 
-            //}
+                    transfered++;
+                    remaining = size - ((transfered)*(BUFFER));
 
+                    fread(buffer, 1, BUFFER, s);
+                    fwrite(buffer, 1, BUFFER,localFile);
+                    
+                }
 
+                fread(buffer, 1, remaining, s);
+                fwrite(buffer, 1, remaining,localFile);
 
+            }
 
+            fflush(s);
         }
 
         else{
