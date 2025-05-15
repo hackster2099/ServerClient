@@ -5,7 +5,8 @@
 #include <sys/time.h>
 #include <string.h>
 
-# define BUFFER 1000
+# define BUFFER_SIZE 1000
+# define min(a,b) (((a) < (b)) ? (a) : (b))
 
 int main(int argc, char * argv[]) {
 
@@ -14,14 +15,14 @@ int main(int argc, char * argv[]) {
     int count = 0;
 
     int fstSize = 10;
-    char serverName[BUFFER] = ".cs.sierracollege.edu";
+    char serverName[BUFFER_SIZE] = ".cs.sierracollege.edu";
     char *serverSelect = (char *)malloc(fstSize * sizeof(char));
 
-    char request[3];
+    char request[10];
 
     printf("Connect to Server --> (newark, london):  ");
     
-     while(fgets(serverSelect, BUFFER, stdin)){
+     while(fgets(serverSelect, BUFFER_SIZE, stdin)){
 
         char *nl = strchr(serverSelect,'\n');
 
@@ -48,19 +49,19 @@ int main(int argc, char * argv[]) {
     printf("\nConnected to the Socket");
 
     FILE *s = fdopen(fd, "r+");
-    char response[BUFFER];
-    char fileName[BUFFER];
+    char response[BUFFER_SIZE];
+    char fileName[BUFFER_SIZE];
     char garbageBuff[3];
     long size;
-    unsigned char buffer[BUFFER];
-    long transfered;
-    int remaining;
+    unsigned char buffer[BUFFER_SIZE];
+    long totalRec = 0;
+    long remaining;
+    long bytes_wanted;
+    long bytes_recieved;
 
     printf("\nOption\nL) --> list of files\nD) --> download files\nQ) --> Quit\n");
-
-    fflush(s);
     
-    while(fgets(request, 3, stdin)){
+    while(fgets(request, 10, stdin)){
 
         char *nl = strchr(request, '\n');
 
@@ -81,7 +82,7 @@ int main(int argc, char * argv[]) {
 
             fprintf(s, "LIST\n");
             
-            while(fgets(response, BUFFER, s)){
+            while(fgets(response, BUFFER_SIZE, s)){
 
                 if(*response == '.'){
                 break;
@@ -99,7 +100,7 @@ int main(int argc, char * argv[]) {
 
            printf("\nFile to Download: ");
            
-           fgets(fileName, BUFFER, stdin);
+           fgets(fileName, BUFFER_SIZE, stdin);
 
             char *nl = strchr(fileName, '\n');
 
@@ -113,49 +114,27 @@ int main(int argc, char * argv[]) {
 
             fprintf(s,"SIZE %s\n", fileName);
 
-            fgets(response, BUFFER, s);
+            fgets(response, BUFFER_SIZE, s);
 
             sscanf(response, "+OK %ld", &size);
 
             fprintf(s, "GET %s\n", fileName);
 
-            if(size == 0){
+            fread(garbageBuff, 3, 3, s);
 
-                fread(buffer, 0, size, s);
-                fwrite(buffer, 0, size,localFile);
+            while(totalRec < size){
+
+                remaining = size - totalRec;
+                bytes_wanted = min(remaining, BUFFER_SIZE);
+                bytes_recieved = fread(buffer, 1, bytes_wanted, s);
+                fwrite(buffer,1, bytes_recieved, localFile);
+                totalRec = totalRec + bytes_recieved;
+                printf("End of Loop\n");
+
                 fflush(s);
-
-            }
-
-        if(size < 1000 && size != 0){
-
-                fread(garbageBuff, 3, 3, s);
-                fread(buffer, 1, size, s); // --> -5 for size, same as below
-                fwrite(buffer, 1, size,localFile);
-                fflush(s);
-
-            }
-
-            if(size >= 1000){
-
-                fread(garbageBuff, 3, 3, s);
                 
-                while(transfered <= remaining){
-
-                    transfered++;
-                    remaining = size - ((transfered)*(BUFFER));
-
-                    fread(buffer, 1, BUFFER, s);
-                    fwrite(buffer, 1, BUFFER,localFile);
-                    
-                }
-
-                fread(buffer, 1, remaining, s);
-                fwrite(buffer, 1, remaining,localFile);
-
             }
 
-            fflush(s);
         }
 
         else{
