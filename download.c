@@ -3,12 +3,16 @@
 #include <libsocket/libinetsocket.h>
 #include <unistd.h>
 #include <string.h>
+#include "ansi-colors.h"
 
 // Defining the buffer size as well as min function --> searched up the min function
 #define BUFFER_SIZE 1000
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 int main(int argc, char *argv[]) {
+
+    //designing download sign
+    //char design[6] = {'/', '-', '.', '-', '\\', '|' };
 
     // creating an array for the address and allocating memory for the user input for selecting the server
     int fstSize = 10;
@@ -140,6 +144,14 @@ int main(int argc, char *argv[]) {
                 size_t bytesRead = fread(buffer, 1, bytesToRead, s);
                 fwrite(buffer, 1, bytesRead, localFile);
                 totalRec += bytesRead;
+                sleep(1/2);
+               
+                // implementing the download percentage design, by using the /r to replace
+                // text and flush out the output from the screen
+                // also, adding colors to the amount of bytes being downloaded
+                printf("\r%sDownloading %5.1f%%, %sBytes:%ld%s", CRESET,(((double)totalRec/size)*100), RED,totalRec,CRESET);
+                fflush(stdout);
+
             }
 
             // closing the localfile for writing binary data
